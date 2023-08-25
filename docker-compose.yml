@@ -18,6 +18,10 @@ services:
       --http
       --http.addr=0.0.0.0
       --http.api=eth,web3,trace,rpc
+      --authrpc.addr=0.0.0.0
+      --log.persistent
+      --max-outbound-peers=250
+      --max-inbound-peers=250
     ports:
       - '8545:8545'  # http rpc port
       - '9001:9001'  # metrics port
@@ -51,7 +55,22 @@ services:
       - --metrics-address=0.0.0.0
       - --execution-endpoint=http://reth:8551
       - --execution-jwt=$HOME/nodedata/reth/jwt.hex
-      - --disable-upnp
+#      - --disable-upnp
+
+  metrics-exporter:
+    container_name: metrics-exporter
+    restart: unless-stopped
+    image: ethpandaops/ethereum-metrics-exporter:debian-latest
+    depends_on:
+      - reth
+      - lighthouse
+    ports:
+      - 9091:9091 # metrics
+    volumes:
+      - ./ethereum-metrics-exporter/config.yaml:/root/config.yaml
+    command:
+      - --config=/root/config.yaml
+      - --metrics-port=9091
 
   prometheus:
     container_name: prometheus
