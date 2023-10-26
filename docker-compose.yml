@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 2m
+    networks:
+      - local_reth
     build:
       context: ./reth
       dockerfile: Dockerfile
@@ -17,13 +19,16 @@ services:
       --datadir $HOME/nodedata/reth/
       --http
       --http.addr=0.0.0.0
+      --ws
+      --ws.addr=0.0.0.0
       --http.api=eth,web3,trace,rpc
       --authrpc.addr=0.0.0.0
-      --log.persistent
       --max-outbound-peers=250
       --max-inbound-peers=250
+      --rpc-max-connections=250
     ports:
       - '8545:8545'  # http rpc port
+      - '8546:8546'  # ws rpc port
       - '9001:9001'  # metrics port
       - '8551:8551'  # engine api port
 
@@ -34,6 +39,8 @@ services:
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 2m
+    networks:
+      - local_reth
     depends_on:
       - reth
     volumes:
@@ -61,6 +68,8 @@ services:
     container_name: metrics-exporter
     restart: unless-stopped
     image: ethpandaops/ethereum-metrics-exporter:debian-latest
+    networks:
+      - local_reth
     depends_on:
       - reth
       - lighthouse
@@ -79,6 +88,8 @@ services:
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 2m
+    networks:
+      - local_reth
     depends_on:
       - reth
       - lighthouse
@@ -98,6 +109,8 @@ services:
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 2m
+    networks:
+      - local_reth
     depends_on:
       - prometheus
     ports:
@@ -118,3 +131,7 @@ volumes:
     driver: local
   grafanadata:
     driver: local
+
+networks:
+  local_reth:
+    external: true
